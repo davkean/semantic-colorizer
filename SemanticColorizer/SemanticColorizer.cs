@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Utilities;
 using System;
 using System.Collections.Generic;
@@ -128,7 +129,7 @@ namespace SemanticColorizer
                 var task = Cache.Resolve(_theBuffer, spans[0].Snapshot);
                 try
                 {
-                    task.Wait();
+                    ThreadHelper.JoinableTaskFactory.Run(task);
                 }
                 catch (Exception)
                 {
@@ -330,10 +331,8 @@ namespace SemanticColorizer
                     return null;
                 }
 
-                // the ConfigureAwait() calls are important,
-                // otherwise we'll deadlock VS
-                var semanticModel = await document.GetSemanticModelAsync().ConfigureAwait(false);
-                var syntaxRoot = await document.GetSyntaxRootAsync().ConfigureAwait(false);
+                var semanticModel = await document.GetSemanticModelAsync();
+                var syntaxRoot = await document.GetSyntaxRootAsync();
                 return new Cache
                 {
                     Workspace = workspace,
